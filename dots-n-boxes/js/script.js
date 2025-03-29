@@ -14,6 +14,7 @@ function drawDots() {
         for (let j = 0; j < gridSize; j++) {
             ctx.beginPath();
             ctx.arc(i * boxSize + dotSize, j * boxSize + dotSize, dotSize, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 1)';
             ctx.fill();
         }
     }
@@ -36,8 +37,8 @@ function drawBoxes() {
         ctx.fillRect(box.x, box.y, boxSize, boxSize);
 
         // Draw the box border
-        ctx.strokeStyle = 'black';
-        ctx.strokeRect(box.x, box.y, boxSize, boxSize);
+        //ctx.strokeStyle = 'black';
+        //ctx.strokeRect(box.x, box.y, boxSize, boxSize);
     });
 }
 
@@ -136,23 +137,28 @@ canvas.addEventListener('click', (event) => {
                 const boxLines = [
                     { start: { x: i * boxSize + dotSize, y: j * boxSize + dotSize }, end: { x: (i + 1) * boxSize + dotSize, y: j * boxSize + dotSize } },
                     { start: { x: (i + 1) * boxSize + dotSize, y: j * boxSize + dotSize }, end: { x: (i + 1) * boxSize + dotSize, y: (j + 1) * boxSize + dotSize } },
-                    { start: { x: (i + 1) * boxSize + dotSize, y: (j + 1) * boxSize + dotSize }, end: { x: i * boxSize + dotSize, y: (j + 1) * boxSize + dotSize } },
-                    { start: { x: i * boxSize + dotSize, y: (j + 1) * boxSize + dotSize }, end: { x: i * boxSize + dotSize, y: j * boxSize + dotSize } }
+                    { start: { x: i * boxSize + dotSize, y: (j + 1) * boxSize + dotSize }, end: { x: (i + 1) * boxSize + dotSize, y: (j + 1) * boxSize + dotSize } },
+                    { start: { x: i * boxSize + dotSize, y: j * boxSize + dotSize }, end: { x: i * boxSize + dotSize, y: (j + 1) * boxSize + dotSize } }
                 ];
+                if (boxes.some(box => box.x === i * boxSize + dotSize && box.y === j * boxSize + dotSize)) {
+                    continue;
+                }
                 if (boxLines.every(line => lines.some(l => l.start.x === line.start.x && l.start.y === line.start.y && l.end.x === line.end.x && l.end.y === line.end.y))) {
                     if (!boxes.some(box => box.x === i * boxSize && box.y === j * boxSize)) {
-                        completedBoxes.push({ x: i * boxSize, y: j * boxSize, player: currentPlayer });
+                        completedBoxes.push({ x: i * boxSize + dotSize, y: j * boxSize + dotSize, player: currentPlayer });
                     }
                 }
             }
         }
 
+        // Add completed boxes to the boxes array
         completedBoxes.forEach(box => {
             boxes.push(box);
         });
 
+        // If no boxes were completed, switch players
         if (completedBoxes.length === 0) {
-            currentPlayer = currentPlayer === 1 ? 2 : 1; // Switch players
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
         }
     }
 
@@ -160,7 +166,16 @@ canvas.addEventListener('click', (event) => {
 
     // Check for game over condition
     if (lines.length === (gridSize - 1) * gridSize * 2) {
-        alert(`Game Over! Player ${currentPlayer === 1 ? 2 : 1} wins!`);
+        const player1Boxes = boxes.filter(box => box.player === 1).length;
+        const player2Boxes = boxes.filter(box => box.player === 2).length;
+
+        if (player1Boxes > player2Boxes) {
+            alert(`Game Over! Player 1 wins with ${player1Boxes} boxes!`);
+        } else if (player2Boxes > player1Boxes) {
+            alert(`Game Over! Player 2 wins with ${player2Boxes} boxes!`);
+        } else {
+            alert(`Game Over! It's a tie with ${player1Boxes} boxes each!`);
+        }
         // Reset game logic here
         lines = [];
         boxes = [];
